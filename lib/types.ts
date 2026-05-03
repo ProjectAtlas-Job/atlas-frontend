@@ -1,0 +1,29 @@
+export type UserRead = {
+  id: number;
+  email: string;
+  is_active: boolean;
+  is_superuser: boolean;
+  is_email_verified: boolean;
+  full_name: string | null;
+  phone: string | null;
+  location: string | null;
+  bio: string | null;
+  linkedin_url: string | null;
+  github_username: string | null;
+  portfolio_url: string | null;
+  experience_level: string | null;
+  target_work_types: string[] | null;
+  target_roles: string[] | null;
+  target_locations: string[] | null;
+  skills: string[] | null;
+  github_metadata: Record<string, unknown> | unknown[] | null;
+  has_completed_onboarding: boolean;
+  profile_completeness: number;
+  created_at: string;
+  updated_at: string | null;
+};
+
+export type TokenResponse = {
+  access_token: string;
+  token_type?: string;
+};
