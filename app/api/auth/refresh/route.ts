@@ -1,13 +1,14 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-const backendUrl = process.env.NEXT_PUBLIC_API_URL;
+import { getServerApiBaseUrl } from "@/lib/env";
 
 export async function POST() {
   const cookieStore = await cookies();
   const refreshToken = cookieStore.get("refresh_token")?.value;
+  const backendUrl = getServerApiBaseUrl();
 
-  if (!backendUrl || !refreshToken) {
+  if (!refreshToken) {
     return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
   }
 

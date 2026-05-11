@@ -3,16 +3,17 @@
 import axios from "axios";
 
 import { useAuthStore } from "@/stores/auth.store";
-
-const baseURL = process.env.NEXT_PUBLIC_API_URL;
+import { getPublicApiBaseUrl } from "@/lib/env";
 
 export const api = axios.create({
-  baseURL,
   withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().accessToken;
+
+  config.baseURL ??= getPublicApiBaseUrl();
+
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
