@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import { AuthNavigationBridge } from "@/components/providers/AuthNavigationBridge";
-import { AppProviders } from "@/components/providers/AppProviders";
 
 export const metadata: Metadata = {
   title: "Project Atlas",
@@ -17,10 +16,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <AppProviders>
-          <AuthNavigationBridge />
-          {children}
-        </AppProviders>
+        <AuthNavigationBridge />
+        {children}
       </body>
     </html>
   );
