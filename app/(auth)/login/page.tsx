@@ -9,9 +9,9 @@ import { z } from "zod";
 
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { AuthShell } from "@/components/auth/AuthShell";
 import type { TokenResponse, UserRead } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -68,13 +68,34 @@ export default function LoginPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.22),_transparent_35%),linear-gradient(160deg,#f8fafc_0%,#e2e8f0_100%)] px-4 py-10">
-      <Card className="w-full max-w-md rounded-[2rem] border-0 shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
-        <CardHeader>
-          <CardTitle className="text-3xl">Log in</CardTitle>
-          <CardDescription>Use your Project Atlas account to continue.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <AuthShell
+      badge="Sprint 1 Auth"
+      title="Sign in to Project Atlas"
+      description="Use the verified account linked to your dashboard. The frontend keeps access tokens in memory and restores sessions through the server-side refresh route."
+      sideNote="If login fails with a 403, the backend is rejecting the session because the email still needs verification or the account is inactive."
+      footer={
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600">
+          <Link className="transition-colors hover:text-slate-950" href="/forgot-password">
+            Forgot password?
+          </Link>
+          <Link className="transition-colors hover:text-slate-950" href="/register">
+            Create account
+          </Link>
+          <Link
+            className="transition-colors hover:text-slate-950"
+            href={`/verify-email?email=${encodeURIComponent(form.watch("email") ?? "")}`}
+          >
+            Verify email
+          </Link>
+        </div>
+      }
+    >
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Account Access</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">Log in</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Use your Project Atlas account to continue.</p>
+      </div>
+      <div className="mt-8">
           <Form {...form}>
             <form className="space-y-5" onSubmit={onSubmit}>
               <FormField
@@ -109,24 +130,7 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-          <div className="mt-6 flex items-center justify-between text-sm text-slate-600">
-            <Link className="hover:text-slate-950" href="/forgot-password">
-              Forgot password?
-            </Link>
-            <Link className="hover:text-slate-950" href="/register">
-              Create account
-            </Link>
-          </div>
-          <div className="mt-2 flex items-center justify-between text-sm text-slate-600">
-            <Link className="hover:text-slate-950" href={`/verify-email?email=${encodeURIComponent(form.watch("email") ?? "")}`}>
-              Verify email
-            </Link>
-            <Link className="hover:text-slate-950" href="/contact-support">
-              Contact support
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+      </div>
+    </AuthShell>
   );
 }

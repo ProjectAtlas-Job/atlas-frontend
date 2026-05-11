@@ -27,10 +27,11 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-full flex-col gap-4 rounded-[2rem] border border-black/10 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur md:w-72">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Project Atlas</p>
-        <h2 className="mt-2 text-2xl font-semibold text-slate-950">Workspace</h2>
+    <aside className="flex w-full flex-col gap-6 rounded-[2rem] border border-slate-900/10 bg-slate-950 p-5 text-slate-50 shadow-[0_26px_80px_rgba(15,23,42,0.18)] md:w-72">
+      <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200/85">Project Atlas</p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">Workspace</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-300">Sprint 1 dashboard shell with protected routes and refresh-backed sessions.</p>
       </div>
       <nav className="flex flex-col gap-2">
         {links.map((label) => {
@@ -40,8 +41,10 @@ export function Sidebar() {
           return (
             <Link
               className={cn(
-                "rounded-2xl px-4 py-3 text-sm font-medium transition-colors",
-                isActive ? "bg-slate-950 text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-950",
+                "rounded-2xl px-4 py-3 text-sm font-medium transition-all",
+                isActive
+                  ? "bg-white text-slate-950 shadow-[0_12px_32px_rgba(255,255,255,0.12)]"
+                  : "text-slate-300 hover:bg-white/8 hover:text-white",
               )}
               href={href}
               key={label}
@@ -51,6 +54,9 @@ export function Sidebar() {
           );
         })}
       </nav>
+      <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-white/6 p-4 text-sm leading-6 text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+        Backend deployment is temporarily AWS-based. Frontend route protection remains unchanged while the host infrastructure swaps later.
+      </div>
     </aside>
   );
 }

@@ -8,8 +8,8 @@ import { z } from "zod";
 
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -41,13 +41,26 @@ export default function ForgotPasswordPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(248,113,113,0.14),_transparent_35%),linear-gradient(180deg,#f8fafc_0%,#e2e8f0_100%)] px-4 py-10">
-      <Card className="w-full max-w-md rounded-[2rem] border-0 shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
-        <CardHeader>
-          <CardTitle className="text-3xl">Forgot password</CardTitle>
-          <CardDescription>We will send you a reset link if the account exists.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <AuthShell
+      badge="Account Recovery"
+      title="Reset access without exposing account state"
+      description="This page preserves the backend rule from Sprint 1: it always returns the same success message so the app never leaks whether an email exists."
+      footer={
+        <p className="text-sm text-slate-600">
+          Back to{" "}
+          <Link className="font-medium text-slate-950 transition-colors hover:text-slate-700" href="/login">
+            login
+          </Link>
+          .
+        </p>
+      }
+    >
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Password Reset</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">Forgot password</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">We will send you a reset link if the account exists.</p>
+      </div>
+      <div className="mt-8">
           <Form {...form}>
             <form className="space-y-5" onSubmit={onSubmit}>
               <FormField
@@ -70,14 +83,7 @@ export default function ForgotPasswordPage() {
               </Button>
             </form>
           </Form>
-          <p className="mt-6 text-sm text-slate-600">
-            Need help?{" "}
-            <Link className="font-medium text-slate-950" href="/contact-support">
-              Contact support
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+      </div>
+    </AuthShell>
   );
 }

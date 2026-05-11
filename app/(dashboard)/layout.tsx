@@ -71,19 +71,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!isReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 text-sm font-medium text-slate-600">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[linear-gradient(180deg,#f7f7f2_0%,#eef2ec_52%,#f6f4ee_100%)] px-4 text-sm font-medium text-slate-600">
         Preparing your dashboard...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#e2e8f0_100%)] p-4 md:p-6">
+    <div className="min-h-[100dvh] bg-[linear-gradient(180deg,#f7f7f2_0%,#eef2ec_52%,#f6f4ee_100%)] p-4 md:p-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 md:flex-row">
         <Sidebar />
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           <TopBar />
-          <div className="rounded-[2rem] border border-black/10 bg-white/75 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="rounded-[2rem] border border-slate-900/10 bg-white/78 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur">
             {children}
           </div>
         </div>

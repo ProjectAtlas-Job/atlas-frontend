@@ -8,8 +8,8 @@ import { z } from "zod";
 
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -49,13 +49,26 @@ export default function ResendVerificationPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.16),_transparent_35%),linear-gradient(180deg,#f8fafc_0%,#e2e8f0_100%)] px-4 py-10">
-      <Card className="w-full max-w-md rounded-[2rem] border-0 shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
-        <CardHeader>
-          <CardTitle className="text-3xl">Resend verification</CardTitle>
-          <CardDescription>Request a fresh verification email.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <AuthShell
+      badge="Email Verification"
+      title="Request another verification email"
+      description="This keeps the registration flow simple: create the account, confirm the mailbox, then return to login."
+      footer={
+        <p className="text-sm text-slate-600">
+          Already verified?{" "}
+          <Link className="font-medium text-slate-950 transition-colors hover:text-slate-700" href="/login">
+            Go to login
+          </Link>
+          .
+        </p>
+      }
+    >
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Verification Recovery</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">Resend verification</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Request a fresh verification email.</p>
+      </div>
+      <div className="mt-8">
           <Form {...form}>
             <form className="space-y-5" onSubmit={onSubmit}>
               <FormField
@@ -78,14 +91,7 @@ export default function ResendVerificationPage() {
               </Button>
             </form>
           </Form>
-          <p className="mt-6 text-sm text-slate-600">
-            Prefer a one-time code?{" "}
-            <Link className="font-medium text-slate-950" href={`/verify-email?email=${encodeURIComponent(form.watch("email") ?? "")}`}>
-              Verify with OTP
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+      </div>
+    </AuthShell>
   );
 }

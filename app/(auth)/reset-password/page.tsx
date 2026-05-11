@@ -2,6 +2,7 @@
 
 import { Suspense } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -9,8 +10,8 @@ import { z } from "zod";
 
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -60,13 +61,26 @@ function ResetPasswordContent() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_right,_rgba(168,85,247,0.14),_transparent_35%),linear-gradient(180deg,#f8fafc_0%,#e2e8f0_100%)] px-4 py-10">
-      <Card className="w-full max-w-md rounded-[2rem] border-0 shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
-        <CardHeader>
-          <CardTitle className="text-3xl">Reset password</CardTitle>
-          <CardDescription>Choose a new password for your account.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <AuthShell
+      badge="Account Recovery"
+      title="Choose a new password"
+      description="The backend accepts a signed reset token, updates the stored password hash, and clears the reset fields in one pass."
+      footer={
+        <p className="text-sm text-slate-600">
+          Need a new reset link?{" "}
+          <Link className="font-medium text-slate-950 transition-colors hover:text-slate-700" href="/forgot-password">
+            Request one again
+          </Link>
+          .
+        </p>
+      }
+    >
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Password Update</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">Reset password</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Choose a new password for your account.</p>
+      </div>
+      <div className="mt-8">
           <Form {...form}>
             <form className="space-y-5" onSubmit={onSubmit}>
               <FormField
@@ -102,9 +116,8 @@ function ResetPasswordContent() {
               </Button>
             </form>
           </Form>
-        </CardContent>
-      </Card>
-    </main>
+      </div>
+    </AuthShell>
   );
 }
 

@@ -8,8 +8,8 @@ import { z } from "zod";
 
 import { api } from "@/lib/api";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -67,13 +67,26 @@ export default function RegisterPage() {
   });
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(16,185,129,0.18),_transparent_35%),linear-gradient(180deg,#f8fafc_0%,#e2e8f0_100%)] px-4 py-10">
-      <Card className="w-full max-w-lg rounded-[2rem] border-0 shadow-[0_28px_80px_rgba(15,23,42,0.14)]">
-        <CardHeader>
-          <CardTitle className="text-3xl">Create account</CardTitle>
-          <CardDescription>Start your Project Atlas profile.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <AuthShell
+      badge="Sprint 1 Auth"
+      title="Create your Project Atlas account"
+      description="Registration writes the user record and default user settings in one transaction, then sends the verification email needed before the first login."
+      sideNote="This flow intentionally stops after registration. The next step is email verification, not an automatic sign-in."
+      footer={
+        <p className="text-sm text-slate-600">
+          Already have an account?{" "}
+          <Link className="font-medium text-slate-950 transition-colors hover:text-slate-700" href="/login">
+            Log in
+          </Link>
+        </p>
+      }
+    >
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">New Account</p>
+        <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">Create account</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">Start your Project Atlas profile.</p>
+      </div>
+      <div className="mt-8">
           <Form {...form}>
             <form className="space-y-5" onSubmit={onSubmit}>
               <FormField
@@ -132,8 +145,7 @@ export default function RegisterPage() {
               </div>
               {registeredEmail ? (
                 <FormAlert tone="success">
-                  Check your inbox at {registeredEmail}. You can verify by email link or request a one-time code on the
-                  verification page.
+                  Check your inbox at {registeredEmail}. Verify your email before logging in.
                 </FormAlert>
               ) : null}
               {errorMessage ? <FormAlert tone="error">{errorMessage}</FormAlert> : null}
@@ -142,25 +154,12 @@ export default function RegisterPage() {
               </Button>
               {registeredEmail ? (
                 <Button asChild className="w-full" variant="outline">
-                  <Link href={`/verify-email?email=${encodeURIComponent(registeredEmail)}`}>Continue to verification</Link>
+                  <Link href={`/verify-email?email=${encodeURIComponent(registeredEmail)}`}>Open verification page</Link>
                 </Button>
               ) : null}
             </form>
           </Form>
-          <p className="mt-6 text-sm text-slate-600">
-            Already have an account?{" "}
-            <Link className="font-medium text-slate-950" href="/login">
-              Log in
-            </Link>
-          </p>
-          <p className="mt-2 text-sm text-slate-600">
-            Need help?{" "}
-            <Link className="font-medium text-slate-950" href="/contact-support">
-              Contact support
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+      </div>
+    </AuthShell>
   );
 }
