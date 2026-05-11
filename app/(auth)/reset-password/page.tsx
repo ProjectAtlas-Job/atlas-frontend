@@ -3,12 +3,15 @@
 import { Suspense } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { api } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
@@ -28,12 +31,17 @@ function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { newPassword: "", confirmPassword: "" },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
+    setSuccessMessage(null);
+    setErrorMessage(null);
+
     if (!token) {
       form.setError("newPassword", { message: "Missing reset token." });
       return;
@@ -44,9 +52,10 @@ function ResetPasswordContent() {
         token,
         new_password: values.newPassword,
       });
-      router.push("/login");
-    } catch {
-      form.setError("newPassword", { message: "Unable to reset password with this link." });
+      setSuccessMessage("Password updated. Redirecting you to login...");
+      window.setTimeout(() => router.push("/login"), 900);
+    } catch (error) {
+      setErrorMessage(getApiErrorMessage(error, "Unable to reset password with this link."));
     }
   });
 
@@ -86,6 +95,8 @@ function ResetPasswordContent() {
                   </FormItem>
                 )}
               />
+              {successMessage ? <FormAlert tone="success">{successMessage}</FormAlert> : null}
+              {errorMessage ? <FormAlert tone="error">{errorMessage}</FormAlert> : null}
               <Button className="w-full" disabled={form.formState.isSubmitting} type="submit">
                 {form.formState.isSubmitting ? "Resetting..." : "Reset password"}
               </Button>

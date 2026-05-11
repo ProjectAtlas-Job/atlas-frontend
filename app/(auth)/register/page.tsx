@@ -7,15 +7,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { api } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
 const schema = z
   .object({
-    fullName: z.string().min(1, "Full name is required."),
-    email: z.string().email("Enter a valid email address."),
+    fullName: z.string().trim().min(1, "Full name is required."),
+    email: z.email("Enter a valid email address.").trim(),
     password: z.string().min(8, "Password must be at least 8 characters."),
     confirmPassword: z.string().min(8, "Confirm your password."),
   })
@@ -27,7 +29,7 @@ const schema = z
 type FormValues = z.infer<typeof schema>;
 
 export default function RegisterPage() {
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -40,24 +42,27 @@ export default function RegisterPage() {
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
-    setSuccessMessage(null);
+    setRegisteredEmail(null);
     setErrorMessage(null);
 
     try {
       await api.post("/api/v1/auth/register", {
-        full_name: values.fullName,
-        email: values.email,
+        full_name: values.fullName.trim(),
+        email: values.email.trim().toLowerCase(),
         password: values.password,
       });
-      setSuccessMessage("Check your inbox to verify your email before logging in.");
+      setRegisteredEmail(values.email.trim().toLowerCase());
       form.reset();
     } catch (error: unknown) {
-      const status = typeof error === "object" && error && "response" in error ? (error as { response?: { status?: number } }).response?.status : undefined;
+      const status =
+        typeof error === "object" && error && "response" in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined;
       if (status === 409) {
         setErrorMessage("An account with that email already exists.");
         return;
       }
-      setErrorMessage("Unable to create your account right now.");
+      setErrorMessage(getApiErrorMessage(error, "Unable to create your account right now."));
     }
   });
 
@@ -125,17 +130,33 @@ export default function RegisterPage() {
                   )}
                 />
               </div>
-              {successMessage ? <p className="text-sm font-medium text-emerald-700">{successMessage}</p> : null}
-              {errorMessage ? <p className="text-sm font-medium text-destructive">{errorMessage}</p> : null}
+              {registeredEmail ? (
+                <FormAlert tone="success">
+                  Check your inbox at {registeredEmail}. You can verify by email link or request a one-time code on the
+                  verification page.
+                </FormAlert>
+              ) : null}
+              {errorMessage ? <FormAlert tone="error">{errorMessage}</FormAlert> : null}
               <Button className="w-full" disabled={form.formState.isSubmitting} type="submit">
                 {form.formState.isSubmitting ? "Creating account..." : "Create account"}
               </Button>
+              {registeredEmail ? (
+                <Button asChild className="w-full" variant="outline">
+                  <Link href={`/verify-email?email=${encodeURIComponent(registeredEmail)}`}>Continue to verification</Link>
+                </Button>
+              ) : null}
             </form>
           </Form>
           <p className="mt-6 text-sm text-slate-600">
             Already have an account?{" "}
             <Link className="font-medium text-slate-950" href="/login">
               Log in
+            </Link>
+          </p>
+          <p className="mt-2 text-sm text-slate-600">
+            Need help?{" "}
+            <Link className="font-medium text-slate-950" href="/contact-support">
+              Contact support
             </Link>
           </p>
         </CardContent>

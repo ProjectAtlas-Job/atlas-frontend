@@ -8,15 +8,17 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { api } from "@/lib/api";
+import { getApiErrorMessage } from "@/lib/api-error";
 import type { TokenResponse, UserRead } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormAlert } from "@/components/ui/form-alert";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuthStore } from "@/stores/auth.store";
 
 const schema = z.object({
-  email: z.string().email("Enter a valid email address."),
+  email: z.email("Enter a valid email address.").trim(),
   password: z.string().min(1, "Password is required."),
 });
 
@@ -37,7 +39,7 @@ export default function LoginPage() {
 
     try {
       const params = new URLSearchParams();
-      params.set("username", values.email);
+      params.set("username", values.email.trim().toLowerCase());
       params.set("password", values.password);
 
       const tokenResponse = await api.post<TokenResponse>("/api/v1/auth/login", params, {
@@ -49,7 +51,10 @@ export default function LoginPage() {
       setUser(userResponse.data);
       router.push("/dashboard");
     } catch (error: unknown) {
-      const status = typeof error === "object" && error && "response" in error ? (error as { response?: { status?: number } }).response?.status : undefined;
+      const status =
+        typeof error === "object" && error && "response" in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined;
       if (status === 403) {
         setErrorMessage("Email not verified.");
         return;
@@ -58,7 +63,7 @@ export default function LoginPage() {
         setErrorMessage("Invalid email or password.");
         return;
       }
-      setErrorMessage("Unable to sign in right now.");
+      setErrorMessage(getApiErrorMessage(error, "Unable to sign in right now."));
     }
   });
 
@@ -98,7 +103,7 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              {errorMessage ? <p className="text-sm font-medium text-destructive">{errorMessage}</p> : null}
+              {errorMessage ? <FormAlert tone="error">{errorMessage}</FormAlert> : null}
               <Button className="w-full" disabled={form.formState.isSubmitting} type="submit">
                 {form.formState.isSubmitting ? "Signing in..." : "Log in"}
               </Button>
@@ -110,6 +115,14 @@ export default function LoginPage() {
             </Link>
             <Link className="hover:text-slate-950" href="/register">
               Create account
+            </Link>
+          </div>
+          <div className="mt-2 flex items-center justify-between text-sm text-slate-600">
+            <Link className="hover:text-slate-950" href={`/verify-email?email=${encodeURIComponent(form.watch("email") ?? "")}`}>
+              Verify email
+            </Link>
+            <Link className="hover:text-slate-950" href="/contact-support">
+              Contact support
             </Link>
           </div>
         </CardContent>
