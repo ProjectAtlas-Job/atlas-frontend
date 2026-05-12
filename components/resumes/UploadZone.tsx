@@ -96,7 +96,9 @@ export function UploadZone() {
       await queryClient.invalidateQueries({ queryKey: resumesQueryKey });
     },
     onError: (error: unknown) => {
+      setActiveResumeId(null);
       setErrorMessage(getApiErrorMessage(error, "Upload failed. Try again."));
+      void queryClient.invalidateQueries({ queryKey: resumesQueryKey });
     },
   });
 
@@ -158,7 +160,7 @@ export function UploadZone() {
               Choose file
             </Button>
             {selectedFile ? (
-              <Button disabled={uploadMutation.isPending} onClick={() => void uploadMutation.mutateAsync()} type="button">
+              <Button disabled={uploadMutation.isPending} onClick={() => uploadMutation.mutate()} type="button">
                 {uploadMutation.isPending ? "Uploading..." : "Upload resume"}
               </Button>
             ) : null}

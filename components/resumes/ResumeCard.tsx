@@ -128,7 +128,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input onChange={(event) => setLabelDraft(event.target.value)} value={labelDraft} />
               <div className="flex gap-2">
-                <Button disabled={editLabelMutation.isPending} onClick={() => void editLabelMutation.mutateAsync()} type="button">
+                <Button disabled={editLabelMutation.isPending} onClick={() => editLabelMutation.mutate()} type="button">
                   Save
                 </Button>
                 <Button
@@ -177,7 +177,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
           ) : null}
           <Button
             disabled={resume.isPrimary || setPrimaryMutation.isPending}
-            onClick={() => void setPrimaryMutation.mutateAsync()}
+            onClick={() => setPrimaryMutation.mutate()}
             type="button"
             variant="outline"
           >
@@ -188,7 +188,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
           disabled={deleteMutation.isPending}
           onClick={() => {
             if (window.confirm("Delete this resume?")) {
-              void deleteMutation.mutateAsync();
+              deleteMutation.mutate();
             }
           }}
           type="button"
