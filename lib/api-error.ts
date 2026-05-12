@@ -17,7 +17,9 @@ export function getApiErrorMessage(error: unknown, fallbackMessage: string) {
             "msg" in item && typeof item.msg === "string" && item.msg.trim() ? item.msg.trim() : null;
           const location =
             "loc" in item && Array.isArray(item.loc)
-              ? item.loc.filter((part): part is string | number => typeof part === "string" || typeof part === "number")
+              ? item.loc.filter(
+                  (part: unknown): part is string | number => typeof part === "string" || typeof part === "number",
+                )
               : [];
 
           if (!message) {
