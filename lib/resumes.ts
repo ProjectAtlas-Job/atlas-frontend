@@ -133,7 +133,7 @@ export async function fetchResumes(): Promise<ResumeRecord[]> {
 
 export async function uploadResume(file: File, label: string | null): Promise<number> {
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("resume_file", file);
 
   const trimmedLabel = label?.trim();
   if (trimmedLabel) {
