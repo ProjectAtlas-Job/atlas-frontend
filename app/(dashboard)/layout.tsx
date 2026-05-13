@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
 
         if (!user) {
-          const meResponse = await api.get<UserRead>("/api/v1/auth/me");
+          const meResponse = await api.get<UserRead>("/api/v1/users/me");
           if (!cancelled) {
             setUser(meResponse.data);
           }

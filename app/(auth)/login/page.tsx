@@ -47,7 +47,7 @@ export default function LoginPage() {
       });
       setToken(tokenResponse.data.access_token);
 
-      const userResponse = await api.get<UserRead>("/api/v1/auth/me");
+      const userResponse = await api.get<UserRead>("/api/v1/users/me");
       setUser(userResponse.data);
       router.push("/dashboard");
     } catch (error: unknown) {

@@ -1,27 +1,32 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { KeyboardEvent, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
+import { TagInput } from "@/components/profile/TagInput";
+import { useToast } from "@/components/providers/ToastProvider";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/providers/ToastProvider";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { getPublicApiBaseUrl } from "@/lib/env";
 import {
   currentUserQueryKey,
   fetchCurrentUser,
+  fetchGithubScan,
   fetchProfileCompleteness,
+  githubScanQueryKey,
   profileCompletenessQueryKey,
   updateCurrentUser,
 } from "@/lib/profile";
 import type { UserRead, UserUpdatePayload } from "@/lib/types";
-import { useAuthStore } from "@/stores/auth.store";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth.store";
 
 const experienceOptions = [
   { label: "Fresher", value: "fresher" },
@@ -46,7 +51,7 @@ type ProfileFormState = {
   bio: string;
   linkedin_url: string;
   portfolio_url: string;
-  experience_level: string;
+  experience_level: "" | "fresher" | "junior" | "mid" | "senior" | "lead";
   target_work_types: string[];
   target_roles: string[];
   target_locations: string[];
@@ -61,7 +66,14 @@ function toFormState(user: UserRead): ProfileFormState {
     bio: user.bio ?? "",
     linkedin_url: user.linkedin_url ?? "",
     portfolio_url: user.portfolio_url ?? "",
-    experience_level: user.experience_level ?? "",
+    experience_level:
+      user.experience_level === "fresher" ||
+      user.experience_level === "junior" ||
+      user.experience_level === "mid" ||
+      user.experience_level === "senior" ||
+      user.experience_level === "lead"
+        ? user.experience_level
+        : "",
     target_work_types: user.target_work_types ?? [],
     target_roles: user.target_roles ?? [],
     target_locations: user.target_locations ?? [],
@@ -77,97 +89,17 @@ function toPayload(form: ProfileFormState): UserUpdatePayload {
     bio: form.bio.trim() || undefined,
     linkedin_url: form.linkedin_url.trim() || undefined,
     portfolio_url: form.portfolio_url.trim() || undefined,
-    experience_level: form.experience_level ? (form.experience_level as UserUpdatePayload["experience_level"]) : undefined,
-    target_work_types: form.target_work_types.length > 0 ? (form.target_work_types as NonNullable<UserUpdatePayload["target_work_types"]>) : undefined,
+    experience_level: form.experience_level || undefined,
+    target_work_types: form.target_work_types.length > 0 ? form.target_work_types : undefined,
     target_roles: form.target_roles.length > 0 ? form.target_roles : undefined,
     target_locations: form.target_locations.length > 0 ? form.target_locations : undefined,
     skills: form.skills.length > 0 ? form.skills : undefined,
   };
 }
 
-function normalizeTag(value: string) {
-  return value.trim().replace(/\s+/g, " ");
-}
-
-function TagInput({
-  id,
-  label,
-  helper,
-  tags,
-  setTags,
-  limit,
-  countLabel,
-}: {
-  id: string;
-  label: string;
-  helper: string;
-  tags: string[];
-  setTags: (updater: (current: string[]) => string[]) => void;
-  limit?: number;
-  countLabel?: string;
-}) {
-  const [draft, setDraft] = useState("");
-  const hasReachedLimit = limit !== undefined && tags.length >= limit;
-
-  const addTag = () => {
-    const normalized = normalizeTag(draft);
-    if (!normalized) {
-      setDraft("");
-      return;
-    }
-    if (hasReachedLimit || tags.includes(normalized)) {
-      setDraft("");
-      return;
-    }
-    setTags((current) => [...current, normalized]);
-    setDraft("");
-  };
-
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== "Enter") {
-      return;
-    }
-    event.preventDefault();
-    addTag();
-  };
-
-  return (
-    <div className="space-y-3" id={id}>
-      <div className="flex items-center justify-between gap-3">
-        <Label htmlFor={`${id}-input`}>{label}</Label>
-        {countLabel ? (
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{countLabel}</span>
-        ) : null}
-      </div>
-      <Input
-        id={`${id}-input`}
-        onChange={(event) => setDraft(event.target.value)}
-        onKeyDown={onKeyDown}
-        placeholder="Type and press Enter"
-        value={draft}
-      />
-      <p className="text-sm text-slate-500">{helper}</p>
-      {limit !== undefined && hasReachedLimit ? (
-        <FormAlert tone="info">You can add up to {limit} entries here.</FormAlert>
-      ) : null}
-      <div className="flex flex-wrap gap-2">
-        {tags.map((tag) => (
-          <button
-            className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
-            key={tag}
-            onClick={() => setTags((current) => current.filter((item) => item !== tag))}
-            type="button"
-          >
-            {tag} x
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function ProfilePage() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
   const setUser = useAuthStore((state) => state.setUser);
   const authUser = useAuthStore((state) => state.user);
   const { showToast } = useToast();
@@ -178,13 +110,32 @@ export default function ProfilePage() {
     queryKey: currentUserQueryKey,
     queryFn: fetchCurrentUser,
   });
+  const completenessQuery = useQuery({
+    queryKey: profileCompletenessQueryKey,
+    queryFn: fetchProfileCompleteness,
+  });
+  const githubScanQuery = useQuery({
+    queryKey: githubScanQueryKey,
+    queryFn: fetchGithubScan,
+  });
 
   useEffect(() => {
-    if (currentUserQuery.data) {
-      setForm(toFormState(currentUserQuery.data));
-      setUser(currentUserQuery.data);
+    if (!currentUserQuery.data) {
+      return;
     }
+    setForm(toFormState(currentUserQuery.data));
+    setUser(currentUserQuery.data);
   }, [currentUserQuery.data, setUser]);
+
+  useEffect(() => {
+    if (searchParams.get("github") === "connected") {
+      showToast("GitHub connected. Repo scan metadata is now available on your profile.", "success");
+      void queryClient.invalidateQueries({ queryKey: githubScanQueryKey });
+      void queryClient.invalidateQueries({ queryKey: profileCompletenessQueryKey });
+    }
+  }, [queryClient, searchParams, showToast]);
+
+  const githubConnectUrl = useMemo(() => `${getPublicApiBaseUrl()}/api/v1/auth/github/connect`, []);
 
   const updateField = <Key extends keyof ProfileFormState,>(field: Key, value: ProfileFormState[Key]) => {
     setForm((current) => (current ? { ...current, [field]: value } : current));
@@ -217,6 +168,7 @@ export default function ProfilePage() {
       if (context?.previousUser) {
         queryClient.setQueryData(currentUserQueryKey, context.previousUser);
         setUser(context.previousUser);
+        setForm(toFormState(context.previousUser));
       }
       setErrorMessage(getApiErrorMessage(error, "Unable to save profile updates."));
       showToast("Profile update failed. Your previous values were restored.", "error");
@@ -225,7 +177,10 @@ export default function ProfilePage() {
       queryClient.setQueryData(currentUserQueryKey, user);
       setUser(user);
       setForm(toFormState(user));
-      await queryClient.invalidateQueries({ queryKey: profileCompletenessQueryKey });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: profileCompletenessQueryKey }),
+        queryClient.invalidateQueries({ queryKey: githubScanQueryKey }),
+      ]);
       const completeness = await queryClient.fetchQuery({
         queryKey: profileCompletenessQueryKey,
         queryFn: fetchProfileCompleteness,
@@ -254,7 +209,9 @@ export default function ProfilePage() {
       <Card className="border border-slate-200 bg-white shadow-sm">
         <CardHeader>
           <CardTitle>Edit your profile</CardTitle>
-          <CardDescription>Changes save back to `PUT /api/v1/users/me` and refresh profile completeness immediately.</CardDescription>
+          <CardDescription>
+            Changes save back to `PUT /api/v1/users/me` and refresh profile completeness immediately.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {errorMessage ? <FormAlert tone="error">{errorMessage}</FormAlert> : null}
@@ -276,7 +233,9 @@ export default function ProfilePage() {
               <Label htmlFor="experience_level">Experience level</Label>
               <Select
                 id="experience_level"
-                onChange={(event) => updateField("experience_level", event.target.value)}
+                onChange={(event) =>
+                  updateField("experience_level", event.target.value as ProfileFormState["experience_level"])
+                }
                 value={form.experience_level}
               >
                 <option value="">Select a level</option>
@@ -348,29 +307,31 @@ export default function ProfilePage() {
           </div>
 
           <TagInput
-            countLabel={`${form.target_roles.length}/10 roles`}
-            helper="Add up to ten target roles."
+            helperText="Type a role and press Enter. Maximum 10 roles."
             id="target-roles"
             label="Target roles"
-            limit={10}
-            setTags={(updater) => updateField("target_roles", updater(form.target_roles))}
-            tags={form.target_roles}
+            maxItems={10}
+            onChange={(target_roles) => updateField("target_roles", target_roles)}
+            placeholder="Add a target role"
+            values={form.target_roles}
           />
 
           <TagInput
-            helper="Add as many skills as you need. Backend normalization will lowercase them."
+            helperText="Add as many skills as you need. Backend normalization will lowercase them."
             id="skills"
             label="Skills"
-            setTags={(updater) => updateField("skills", updater(form.skills))}
-            tags={form.skills}
+            onChange={(skills) => updateField("skills", skills)}
+            placeholder="Add a skill"
+            values={form.skills}
           />
 
           <TagInput
-            helper="Track locations you are open to."
+            helperText="Track locations you are open to."
             id="target-locations"
             label="Target locations"
-            setTags={(updater) => updateField("target_locations", updater(form.target_locations))}
-            tags={form.target_locations}
+            onChange={(target_locations) => updateField("target_locations", target_locations)}
+            placeholder="Add a location"
+            values={form.target_locations}
           />
 
           <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4">
@@ -384,6 +345,109 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <Card className="border border-slate-200 bg-white shadow-sm">
+          <CardHeader>
+            <CardTitle>Profile completeness</CardTitle>
+            <CardDescription>These missing actions map directly to the Sprint 2 completeness score.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current score</p>
+              <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950">
+                {completenessQuery.data?.score ?? currentUserQuery.data.profile_completeness}/100
+              </p>
+            </div>
+            {completenessQuery.data && completenessQuery.data.missing.length > 0 ? (
+              <div className="space-y-3">
+                {completenessQuery.data.missing.map((item) => (
+                  <a
+                    className="block rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100"
+                    href={item.action_url}
+                    key={item.field}
+                  >
+                    <span className="font-medium capitalize text-slate-950">{item.field.replaceAll("_", " ")}</span>
+                    <span className="ml-2 text-slate-500">+{item.points} points</span>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">Your Sprint 2 profile fields are complete.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border border-slate-200 bg-white shadow-sm">
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-2">
+              <CardTitle>GitHub connect</CardTitle>
+              <CardDescription>
+                Connect GitHub to scan recent repositories and store languages, topics, and top repos in your profile metadata.
+              </CardDescription>
+            </div>
+            <Button asChild variant="outline">
+              <a href={githubConnectUrl}>
+                {githubScanQuery.data?.status === "connected" ? "Reconnect GitHub" : "Connect GitHub"}
+              </a>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {githubScanQuery.isLoading ? <p className="text-sm text-slate-600">Loading GitHub scan status...</p> : null}
+            {githubScanQuery.data?.status === "not_connected" ? (
+              <p className="text-sm text-slate-600">GitHub is not connected yet.</p>
+            ) : null}
+            {githubScanQuery.data?.status === "connected" ? (
+              <>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <p className="text-sm font-medium text-slate-950">@{githubScanQuery.data.github_username ?? "unknown"}</p>
+                  <p className="mt-1 text-sm text-slate-600">Total stars: {githubScanQuery.data.metadata.total_stars}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Languages</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {Object.entries(githubScanQuery.data.metadata.languages).map(([language, count]) => (
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-700" key={language}>
+                        {language} · {count}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Topics</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {githubScanQuery.data.metadata.topics.length > 0 ? (
+                      githubScanQuery.data.metadata.topics.map((topic) => (
+                        <span className="rounded-full bg-emerald-50 px-3 py-1 text-sm text-emerald-700" key={topic}>
+                          {topic}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500">No topics found.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Top repositories</p>
+                  {githubScanQuery.data.metadata.top_repos.map((repo) => (
+                    <div className="rounded-2xl border border-slate-200 px-4 py-3" key={repo.name}>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-medium text-slate-950">{repo.name}</p>
+                        <span className="text-sm text-slate-500">{repo.stars} stars</span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-600">{repo.description ?? "No description provided."}</p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{repo.language ?? "Unknown language"}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -37,11 +37,18 @@ export function Sidebar() {
       <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200/85">Project Atlas</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">Workspace</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-300">Sprint 1 dashboard shell with protected routes and refresh-backed sessions.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-300">Sprint 2 dashboard with profile editing, GitHub connect, and resume parsing.</p>
       </div>
       <nav className="flex flex-col gap-2">
         {links.map((label) => {
-          const href = label === "Jobs" ? "/dashboard" : label === "Profile" ? "/profile" : `/dashboard/${slugify(label)}`;
+          const href =
+            label === "Jobs"
+              ? "/dashboard"
+              : label === "Profile"
+                ? "/profile"
+                : label === "Resumes"
+                  ? "/resumes"
+                  : `/dashboard/${slugify(label)}`;
           const isActive = pathname === href;
 
           return (
@@ -63,7 +70,7 @@ export function Sidebar() {
       <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-200/85">Profile completeness</p>
         <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-white">
-          {completenessQuery.data ? `${completenessQuery.data.score}%` : "--"}
+          {completenessQuery.data ? `${completenessQuery.data.score}/100` : "--"}
         </p>
         <p className="mt-2 text-sm leading-6 text-slate-300">
           {completenessQuery.data
