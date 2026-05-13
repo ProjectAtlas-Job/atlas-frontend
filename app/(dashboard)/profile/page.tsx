@@ -44,6 +44,7 @@ const workTypeOptions = [
 ] as const;
 
 type WorkType = NonNullable<UserUpdatePayload["target_work_types"]>[number];
+const allowedWorkTypes = new Set<WorkType>(workTypeOptions.map((option) => option.value));
 
 type ProfileFormState = {
   full_name: string;
@@ -75,7 +76,9 @@ function toFormState(user: UserRead): ProfileFormState {
       user.experience_level === "lead"
         ? user.experience_level
         : "",
-    target_work_types: user.target_work_types ?? [],
+    target_work_types: (user.target_work_types ?? []).filter(
+      (value): value is WorkType => allowedWorkTypes.has(value as WorkType),
+    ),
     target_roles: user.target_roles ?? [],
     target_locations: user.target_locations ?? [],
     skills: user.skills ?? [],
