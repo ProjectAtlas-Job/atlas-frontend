@@ -206,6 +206,8 @@ export default function ProfilePage() {
     return <FormAlert tone="error">Unable to load your profile right now.</FormAlert>;
   }
 
+  const currentUser = currentUserQuery.data;
+
   return (
     <div className="space-y-6">
       <section className="space-y-1">
@@ -364,7 +366,7 @@ export default function ProfilePage() {
             <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Current score</p>
               <p className="mt-2 text-3xl font-semibold tracking-[-0.04em] text-slate-950">
-                {completenessQuery.data?.score ?? currentUserQuery.data.profile_completeness}/100
+                {completenessQuery.data?.score ?? currentUser.profile_completeness}/100
               </p>
             </div>
             {completenessQuery.data && completenessQuery.data.missing.length > 0 ? (
