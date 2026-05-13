@@ -79,7 +79,7 @@ export function Sidebar() {
         </p>
       </div>
       <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-white/6 p-4 text-sm leading-6 text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-        Backend deployment is temporarily AWS-based. Frontend route protection remains unchanged while the host infrastructure swaps later.
+        Sprint 2 focuses on profile completion, GitHub connect, and resume parsing. Later sections stay intentionally minimal until their sprint lands.
       </div>
     </aside>
   );
