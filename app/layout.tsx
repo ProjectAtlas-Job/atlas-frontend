@@ -3,6 +3,7 @@ import "./globals.css";
 
 import { AuthNavigationBridge } from "@/components/providers/AuthNavigationBridge";
 import { AppQueryProvider } from "@/components/providers/QueryProvider";
+import { ToastProvider } from "@/components/providers/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Project Atlas",
@@ -18,8 +19,10 @@ export default function RootLayout({
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <AppQueryProvider>
-          <AuthNavigationBridge />
-          {children}
+          <ToastProvider>
+            <AuthNavigationBridge />
+            {children}
+          </ToastProvider>
         </AppQueryProvider>
       </body>
     </html>

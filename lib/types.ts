@@ -23,6 +23,31 @@ export type UserRead = {
   updated_at: string | null;
 };
 
+export type UserUpdatePayload = {
+  full_name?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  bio?: string | null;
+  linkedin_url?: string | null;
+  portfolio_url?: string | null;
+  experience_level?: "fresher" | "junior" | "mid" | "senior" | "lead" | null;
+  target_work_types?: ("full_time" | "part_time" | "internship" | "contract" | "freelance")[] | null;
+  target_roles?: string[] | null;
+  target_locations?: string[] | null;
+  skills?: string[] | null;
+};
+
+export type ProfileCompletenessMissingField = {
+  field: string;
+  points: number;
+  action_url: string;
+};
+
+export type ProfileCompletenessRead = {
+  score: number;
+  missing: ProfileCompletenessMissingField[];
+};
+
 export type TokenResponse = {
   access_token: string;
   token_type?: string;
