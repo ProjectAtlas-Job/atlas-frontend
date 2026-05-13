@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
 
 import { TagInput } from "@/components/profile/TagInput";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -44,6 +43,8 @@ const workTypeOptions = [
   { label: "Freelance", value: "freelance" },
 ] as const;
 
+type WorkType = NonNullable<UserUpdatePayload["target_work_types"]>[number];
+
 type ProfileFormState = {
   full_name: string;
   phone: string;
@@ -52,7 +53,7 @@ type ProfileFormState = {
   linkedin_url: string;
   portfolio_url: string;
   experience_level: "" | "fresher" | "junior" | "mid" | "senior" | "lead";
-  target_work_types: string[];
+  target_work_types: WorkType[];
   target_roles: string[];
   target_locations: string[];
   skills: string[];
@@ -99,7 +100,6 @@ function toPayload(form: ProfileFormState): UserUpdatePayload {
 
 export default function ProfilePage() {
   const queryClient = useQueryClient();
-  const searchParams = useSearchParams();
   const setUser = useAuthStore((state) => state.setUser);
   const authUser = useAuthStore((state) => state.user);
   const { showToast } = useToast();
@@ -128,12 +128,17 @@ export default function ProfilePage() {
   }, [currentUserQuery.data, setUser]);
 
   useEffect(() => {
-    if (searchParams.get("github") === "connected") {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("github") === "connected") {
       showToast("GitHub connected. Repo scan metadata is now available on your profile.", "success");
       void queryClient.invalidateQueries({ queryKey: githubScanQueryKey });
       void queryClient.invalidateQueries({ queryKey: profileCompletenessQueryKey });
     }
-  }, [queryClient, searchParams, showToast]);
+  }, [queryClient, showToast]);
 
   const githubConnectUrl = useMemo(() => `${getPublicApiBaseUrl()}/api/v1/auth/github/connect`, []);
 
