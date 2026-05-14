@@ -52,3 +52,31 @@ export type TokenResponse = {
   access_token: string;
   token_type?: string;
 };
+
+export type JobWorkType = "full_time" | "part_time" | "internship" | "contract" | "freelance";
+
+export type JobPostingRead = {
+  id: number;
+  company_id: number | null;
+  company_name_raw: string;
+  title: string;
+  description: string;
+  location: string | null;
+  work_type: string[];
+  salary_min: number | null;
+  salary_max: number | null;
+  experience_required: string | null;
+  skills_required: string[];
+  source: string;
+  source_url: string;
+  is_active: boolean;
+  posted_at: string | null;
+  scraped_at: string;
+};
+
+export type JobListResponse = {
+  total: number;
+  items: JobPostingRead[];
+  skip: number;
+  limit: number;
+};

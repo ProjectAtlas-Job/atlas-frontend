@@ -43,7 +43,7 @@ export function Sidebar() {
         {links.map((label) => {
           const href =
             label === "Jobs"
-              ? "/dashboard"
+              ? "/jobs"
               : label === "Profile"
                 ? "/profile"
                 : label === "Resumes"
