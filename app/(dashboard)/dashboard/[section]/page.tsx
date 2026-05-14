@@ -12,7 +12,7 @@ export default async function DashboardSectionPage({ params }: DashboardSectionP
   return (
     <div className="space-y-3">
       <h2 className="text-3xl font-semibold text-slate-950">{title}</h2>
-      <p className="text-sm text-slate-600">This area is not part of Sprint 2 yet.</p>
+      <p className="text-sm text-slate-600">This area is planned for a later sprint.</p>
     </div>
   );
 }

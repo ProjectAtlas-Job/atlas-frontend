@@ -62,6 +62,13 @@ export function formatJobSource(source: string): string {
     wellfound: "Wellfound",
     hackernews: "HackerNews",
     manual: "Manual",
+    scraper: "Scraper",
+    glassdoor: "Glassdoor",
+    indeed: "Indeed",
+    unstop: "Unstop",
+    cutshort: "Cutshort",
+    iimjobs: "IIMJobs",
+    hirist: "Hirist",
   };
 
   return map[normalized] ?? source;

@@ -37,7 +37,9 @@ export function Sidebar() {
       <div className="rounded-[1.5rem] border border-white/10 bg-white/6 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-200/85">Project Atlas</p>
         <h2 className="mt-2 text-2xl font-semibold tracking-[-0.04em] text-white">Workspace</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-300">Sprint 2 dashboard with profile editing, GitHub connect, and resume parsing.</p>
+        <p className="mt-2 text-sm leading-6 text-slate-300">
+          Sprint 3 workspace with profile setup, resume parsing, and the live jobs discovery feed.
+        </p>
       </div>
       <nav className="flex flex-col gap-2">
         {links.map((label) => {
@@ -74,12 +76,12 @@ export function Sidebar() {
         </p>
         <p className="mt-2 text-sm leading-6 text-slate-300">
           {completenessQuery.data
-            ? `${completenessQuery.data.missing.length} remaining actions from Sprint 2 profile setup.`
+            ? `${completenessQuery.data.missing.length} remaining actions in your profile setup.`
             : "Fetching your latest completion score..."}
         </p>
       </div>
       <div className="mt-auto rounded-[1.5rem] border border-white/10 bg-white/6 p-4 text-sm leading-6 text-slate-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
-        Sprint 2 focuses on profile completion, GitHub connect, and resume parsing. Later sections stay intentionally minimal until their sprint lands.
+        Sprint 3 adds automated job discovery on top of the Sprint 1-2 account, profile, and resume foundations.
       </div>
     </aside>
   );

@@ -118,9 +118,9 @@ export default function JobsPage() {
   return (
     <div className="space-y-6">
       <section className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Sprint 2</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Sprint 3</p>
         <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">Jobs</h2>
-        <p className="text-sm text-slate-600">Browse active jobs now. Match ranking arrives in Sprint 4.</p>
+        <p className="text-sm text-slate-600">Browse the global jobs feed now. Match ranking arrives in Sprint 4.</p>
       </section>
 
       <div className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">

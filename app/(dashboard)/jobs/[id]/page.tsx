@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
-import { fetchJob } from "@/lib/jobs";
+import { fetchJob, formatJobSource, formatJobWorkType } from "@/lib/jobs";
 
 function JobDetailRow({ label, value }: { label: string; value: string }) {
   return (
@@ -44,7 +44,7 @@ export default function JobDetailPage() {
           Back to jobs
         </Link>
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{job.source}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">{formatJobSource(job.source)}</p>
           <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">{job.title}</h2>
           <p className="text-sm text-slate-600">{job.company_name_raw}</p>
         </div>
@@ -57,7 +57,10 @@ export default function JobDetailPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <JobDetailRow label="Location" value={job.location || "Not specified"} />
-        <JobDetailRow label="Work Type" value={job.work_type.length > 0 ? job.work_type.join(", ") : "Not specified"} />
+        <JobDetailRow
+          label="Work Type"
+          value={job.work_type.length > 0 ? job.work_type.map(formatJobWorkType).join(", ") : "Not specified"}
+        />
         <JobDetailRow
           label="Salary Range"
           value={
