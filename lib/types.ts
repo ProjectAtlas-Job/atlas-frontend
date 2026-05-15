@@ -86,3 +86,45 @@ export type ScraperRunAllResponse = {
   queued_count: number;
   sources: string[];
 };
+
+export type JobMatchRead = {
+  job: JobPostingRead;
+  match_score: number;
+};
+
+export type JobMatchListResponse = {
+  items: JobMatchRead[];
+  cached: boolean;
+  generated_at: string;
+};
+
+export type JobSaveStatus = "saved" | "dismissed" | "applied";
+
+export type UserJobSaveRead = {
+  id: number;
+  user_id: number;
+  job_id: number;
+  status: JobSaveStatus;
+  match_score: number | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type CreateJobSavePayload = {
+  status: Extract<JobSaveStatus, "saved" | "dismissed">;
+  notes?: string | null;
+};
+
+export type UpdateJobSavePayload = {
+  status: JobSaveStatus;
+  notes?: string | null;
+};
+
+export type SavedJobItem = {
+  save: UserJobSaveRead;
+  job: JobPostingRead;
+};
+
+export type SavedJobsResponse = {
+  items: SavedJobItem[];
+};

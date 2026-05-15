@@ -1,15 +1,27 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatJobSource, formatJobWorkType, formatRelativeTime } from "@/lib/jobs";
-import type { JobPostingRead } from "@/lib/types";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormAlert } from "@/components/ui/form-alert";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { createJobSave, formatJobSource, formatJobWorkType, formatRelativeTime } from "@/lib/jobs";
+import type { JobPostingRead, UserJobSaveRead } from "@/lib/types";
 
 type JobCardProps = {
   job: JobPostingRead;
   matchScore?: number | null;
+  context?: "all" | "matches" | "saved";
+  saveRecord?: UserJobSaveRead | null;
+  onDismissOptimistic?: (jobId: number) => (() => void) | void;
+  onSaveRecordChange?: (save: UserJobSaveRead | null) => void;
+  onSavedJobsChanged?: () => void | Promise<void>;
+  detailsSlot?: ReactNode;
+  footerSlot?: ReactNode;
+  showDefaultActions?: boolean;
 };
 
 function formatMatchScore(matchScore: number): string {
@@ -17,7 +29,68 @@ function formatMatchScore(matchScore: number): string {
   return `${displayValue}% match`;
 }
 
-export function JobCard({ job, matchScore }: JobCardProps) {
+function getMatchBadgeClasses(matchScore: number): string {
+  const displayValue = matchScore <= 1 ? matchScore * 100 : matchScore;
+  if (displayValue >= 80) {
+    return "bg-emerald-100 text-emerald-800";
+  }
+  if (displayValue >= 65) {
+    return "bg-amber-100 text-amber-800";
+  }
+  return "bg-slate-100 text-slate-700";
+}
+
+export function JobCard({
+  job,
+  matchScore,
+  context = "all",
+  saveRecord = null,
+  onDismissOptimistic,
+  onSaveRecordChange,
+  onSavedJobsChanged,
+  detailsSlot,
+  footerSlot,
+  showDefaultActions = true,
+}: JobCardProps) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [localSaveRecord, setLocalSaveRecord] = useState<UserJobSaveRead | null>(saveRecord);
+
+  useEffect(() => {
+    setLocalSaveRecord(saveRecord);
+  }, [saveRecord]);
+
+  const saveMutation = useMutation({
+    mutationFn: () => createJobSave(job.id, { status: "saved" }),
+    onSuccess: async (save) => {
+      setErrorMessage(null);
+      setLocalSaveRecord(save);
+      onSaveRecordChange?.(save);
+      await onSavedJobsChanged?.();
+    },
+    onError: (error: unknown) => {
+      setErrorMessage(getApiErrorMessage(error, "Could not save this job."));
+    },
+  });
+
+  const dismissMutation = useMutation({
+    mutationFn: () => createJobSave(job.id, { status: "dismissed" }),
+    onMutate: () => {
+      setErrorMessage(null);
+      return { rollback: onDismissOptimistic?.(job.id) };
+    },
+    onSuccess: async (save) => {
+      setLocalSaveRecord(save);
+      onSaveRecordChange?.(save);
+      await onSavedJobsChanged?.();
+    },
+    onError: (error: unknown, _variables, contextValue) => {
+      contextValue?.rollback?.();
+      setErrorMessage(getApiErrorMessage(error, "Could not dismiss this job."));
+    },
+  });
+
+  const isSaved = localSaveRecord?.status === "saved" || localSaveRecord?.status === "applied";
+
   return (
     <Card className="rounded-[1.75rem] border border-slate-200 bg-white shadow-sm">
       <CardHeader className="gap-3">
@@ -36,8 +109,13 @@ export function JobCard({ job, matchScore }: JobCardProps) {
               {formatJobSource(job.source)}
             </span>
             {typeof matchScore === "number" ? (
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getMatchBadgeClasses(matchScore)}`}>
                 {formatMatchScore(matchScore)}
+              </span>
+            ) : null}
+            {context === "saved" && localSaveRecord ? (
+              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold uppercase text-sky-800">
+                {localSaveRecord.status}
               </span>
             ) : null}
           </div>
@@ -63,15 +141,47 @@ export function JobCard({ job, matchScore }: JobCardProps) {
 
         <p className="line-clamp-3 text-sm leading-6 text-slate-600">{job.description}</p>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <Button asChild size="sm">
-            <Link href={`/jobs/${job.id}`}>View details</Link>
-          </Button>
-          <Button disabled size="sm" title="Save coming soon" variant="outline">
-            Save
-          </Button>
-        </div>
+        {detailsSlot}
+        {errorMessage ? <FormAlert tone="error">{errorMessage}</FormAlert> : null}
       </CardContent>
+
+      <CardFooter className="flex flex-wrap items-center justify-between gap-3">
+        {showDefaultActions ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <Button asChild size="sm">
+              <Link href={`/jobs/${job.id}`}>View details</Link>
+            </Button>
+            <Button
+              disabled={isSaved || saveMutation.isPending}
+              onClick={() => saveMutation.mutate()}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              {isSaved ? "Saved" : saveMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+            {context === "matches" ? (
+              <Button
+                disabled={dismissMutation.isPending}
+                onClick={() => dismissMutation.mutate()}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                {dismissMutation.isPending ? "Dismissing..." : "Dismiss"}
+              </Button>
+            ) : null}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-3">
+            <Button asChild size="sm">
+              <Link href={`/jobs/${job.id}`}>View details</Link>
+            </Button>
+          </div>
+        )}
+
+        {footerSlot}
+      </CardFooter>
     </Card>
   );
 }

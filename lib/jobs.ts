@@ -1,9 +1,24 @@
 "use client";
 
 import { api } from "@/lib/api";
-import type { JobListResponse, JobPostingRead, JobWorkType, ScraperRunAllResponse } from "@/lib/types";
+import type {
+  CreateJobSavePayload,
+  JobListResponse,
+  JobMatchListResponse,
+  JobPostingRead,
+  JobSaveStatus,
+  JobWorkType,
+  SavedJobsResponse,
+  ScraperRunAllResponse,
+  UpdateJobSavePayload,
+  UserJobSaveRead,
+} from "@/lib/types";
 
 export const jobsQueryKey = ["jobs"] as const;
+export const jobDetailQueryKey = (id: number) => ["job", id] as const;
+export const jobMatchesQueryKey = (userId: number) => ["job-matches", userId] as const;
+export const savedJobsQueryKey = (userId: number, status?: JobSaveStatus | "active") =>
+  ["saved-jobs", userId, status ?? "active"] as const;
 
 export type JobListFilters = {
   source?: string;
@@ -19,6 +34,14 @@ function normalizeJobPosting(job: JobPostingRead): JobPostingRead {
     ...job,
     work_type: Array.isArray(job.work_type) ? job.work_type : [],
     skills_required: Array.isArray(job.skills_required) ? job.skills_required : [],
+  };
+}
+
+function normalizeJobSave(save: UserJobSaveRead): UserJobSaveRead {
+  return {
+    ...save,
+    notes: save.notes ?? null,
+    match_score: typeof save.match_score === "number" ? save.match_score : null,
   };
 }
 
@@ -56,6 +79,46 @@ export async function fetchJob(id: number): Promise<JobPostingRead> {
 export async function runAllJobBoardScrapers(): Promise<ScraperRunAllResponse> {
   const response = await api.post<ScraperRunAllResponse>("/api/v1/scraper/run-all");
   return response.data;
+}
+
+export async function fetchJobMatches(): Promise<JobMatchListResponse> {
+  const response = await api.get<JobMatchListResponse>("/api/v1/jobs/matches");
+  return {
+    ...response.data,
+    items: response.data.items.map((item) => ({
+      ...item,
+      job: normalizeJobPosting(item.job),
+    })),
+  };
+}
+
+export async function createJobSave(jobId: number, payload: CreateJobSavePayload): Promise<UserJobSaveRead> {
+  const response = await api.post<UserJobSaveRead>(`/api/v1/jobs/${jobId}/save`, payload);
+  return normalizeJobSave(response.data);
+}
+
+export async function updateJobSave(jobId: number, payload: UpdateJobSavePayload): Promise<UserJobSaveRead> {
+  const response = await api.put<UserJobSaveRead>(`/api/v1/jobs/${jobId}/save`, payload);
+  return normalizeJobSave(response.data);
+}
+
+export async function deleteJobSave(jobId: number): Promise<void> {
+  await api.delete(`/api/v1/jobs/${jobId}/save`);
+}
+
+export async function fetchSavedJobs(status?: JobSaveStatus): Promise<SavedJobsResponse> {
+  const params = new URLSearchParams();
+  if (status) {
+    params.set("status", status);
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  const response = await api.get<SavedJobsResponse>(`/api/v1/jobs/saved${suffix}`);
+  return {
+    items: response.data.items.map((item) => ({
+      save: normalizeJobSave(item.save),
+      job: normalizeJobPosting(item.job),
+    })),
+  };
 }
 
 export function formatJobSource(source: string): string {
