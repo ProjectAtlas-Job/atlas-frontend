@@ -80,3 +80,9 @@ export type JobListResponse = {
   skip: number;
   limit: number;
 };
+
+export type ScraperRunAllResponse = {
+  status: "queued";
+  queued_count: number;
+  sources: string[];
+};

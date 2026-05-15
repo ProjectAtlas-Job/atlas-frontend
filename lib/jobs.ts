@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/lib/api";
-import type { JobListResponse, JobPostingRead, JobWorkType } from "@/lib/types";
+import type { JobListResponse, JobPostingRead, JobWorkType, ScraperRunAllResponse } from "@/lib/types";
 
 export const jobsQueryKey = ["jobs"] as const;
 
@@ -51,6 +51,11 @@ export async function fetchJobs(filters: JobListFilters = {}): Promise<JobListRe
 export async function fetchJob(id: number): Promise<JobPostingRead> {
   const response = await api.get<JobPostingRead>(`/api/v1/jobs/${id}`);
   return normalizeJobPosting(response.data);
+}
+
+export async function runAllJobBoardScrapers(): Promise<ScraperRunAllResponse> {
+  const response = await api.post<ScraperRunAllResponse>("/api/v1/scraper/run-all");
+  return response.data;
 }
 
 export function formatJobSource(source: string): string {

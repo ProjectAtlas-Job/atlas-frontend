@@ -1,13 +1,15 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { JobCard } from "@/components/jobs/JobCard";
+import { useToast } from "@/components/providers/ToastProvider";
+import { Button } from "@/components/ui/button";
 import { JobFilters, type JobFilterState } from "@/components/jobs/JobFilters";
 import { FormAlert } from "@/components/ui/form-alert";
-import { fetchJobs, jobsQueryKey } from "@/lib/jobs";
+import { fetchJobs, jobsQueryKey, runAllJobBoardScrapers } from "@/lib/jobs";
 
 const PAGE_SIZE = 20;
 
@@ -29,9 +31,11 @@ function isJobsTab(value: string | null): value is JobsTab {
 }
 
 export default function JobsPage() {
+  const queryClient = useQueryClient();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { showToast } = useToast();
   const tabParam = searchParams.get("tab");
   const tab: JobsTab = isJobsTab(tabParam) ? tabParam : "all";
   const [filters, setFilters] = useState<JobFilterState>({
@@ -79,6 +83,17 @@ export default function JobsPage() {
     },
   });
 
+  const runAllMutation = useMutation({
+    mutationFn: runAllJobBoardScrapers,
+    onSuccess: async (response) => {
+      showToast(`Queued job searches for ${response.queued_count} boards.`, "success");
+      await queryClient.invalidateQueries({ queryKey: jobsQueryKey });
+    },
+    onError: () => {
+      showToast("Unable to trigger all job board searches right now.", "error");
+    },
+  });
+
   useEffect(() => {
     if (tab !== "all") {
       return;
@@ -122,6 +137,17 @@ export default function JobsPage() {
         <h2 className="text-3xl font-semibold tracking-[-0.04em] text-slate-950">Jobs</h2>
         <p className="text-sm text-slate-600">Browse the global jobs feed now. Match ranking arrives in Sprint 4.</p>
       </section>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          disabled={runAllMutation.isPending}
+          onClick={() => runAllMutation.mutate()}
+          type="button"
+        >
+          {runAllMutation.isPending ? "Queuing Searches..." : "Search All Job Boards"}
+        </Button>
+        <p className="text-sm text-slate-600">Manually queue scraping across all configured job sources.</p>
+      </div>
 
       <div className="inline-flex rounded-full border border-slate-200 bg-slate-100 p-1">
         <button
