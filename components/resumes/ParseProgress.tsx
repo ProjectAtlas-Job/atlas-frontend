@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-import { fetchResumeStatus, resumesQueryKey, type ResumeStatus } from "@/lib/resumes";
+import { fetchResumeStatus, resumesQueryKey, type ResumeRecord, type ResumeStatus } from "@/lib/resumes";
 import { cn } from "@/lib/utils";
 
 type ParseProgressProps = {
@@ -24,19 +24,32 @@ export function ParseProgress({ resume_id }: ParseProgressProps) {
 
     async function pollStatus() {
       try {
-        const nextStatus = await fetchResumeStatus(resume_id);
+        const nextState = await fetchResumeStatus(resume_id);
         if (!active) {
           return;
         }
 
-        setStatus(nextStatus);
+        setStatus(nextState.status);
+        queryClient.setQueryData<ResumeRecord[]>(resumesQueryKey, (current = []) =>
+          current.map((resume) =>
+            resume.id === resume_id
+              ? {
+                  ...resume,
+                  status: nextState.status,
+                  structuralScore: nextState.structuralScore,
+                  semanticScore: nextState.semanticScore,
+                  atsScore: nextState.atsScore,
+                }
+              : resume,
+          ),
+        );
 
-        if (nextStatus === "completed" || nextStatus === "error") {
+        if (nextState.status === "completed" || nextState.status === "error") {
           if (intervalId) {
             clearInterval(intervalId);
           }
 
-          if (nextStatus === "completed") {
+          if (nextState.status === "completed") {
             void queryClient.invalidateQueries({ queryKey: resumesQueryKey });
           }
         }

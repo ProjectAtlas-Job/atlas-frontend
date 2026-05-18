@@ -15,6 +15,14 @@ type ResumeCardProps = {
   resume: ResumeRecord;
 };
 
+function formatAtsScore(value: number | null): string {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "-- / 100";
+  }
+
+  return `${Math.round(Math.max(0, Math.min(100, value)))} / 100`;
+}
+
 function ScoreBar({ value }: { value: number | null }) {
   const normalizedValue = value === null ? 0 : Math.max(0, Math.min(1, value));
 
@@ -152,7 +160,7 @@ export function ResumeCard({ resume }: ResumeCardProps) {
           <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 md:grid-cols-3">
             <div className="space-y-1">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">ATS Score</p>
-              <p className="text-lg font-semibold text-slate-950">-- / 100</p>
+              <p className="text-lg font-semibold text-slate-950">{formatAtsScore(resume.atsScore)}</p>
             </div>
             <div className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Structural Score</p>

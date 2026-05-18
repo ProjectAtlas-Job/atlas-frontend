@@ -18,6 +18,13 @@ export type ResumeRecord = {
   atsScore: number | null;
 };
 
+export type ResumeStatusRecord = {
+  status: ResumeStatus;
+  structuralScore: number | null;
+  semanticScore: number | null;
+  atsScore: number | null;
+};
+
 type ResumeUploadResponse = {
   id: number;
 };
@@ -83,9 +90,14 @@ export async function uploadResume(file: File, label: string | null): Promise<nu
   return response.data.id;
 }
 
-export async function fetchResumeStatus(resumeId: number): Promise<ResumeStatus> {
+export async function fetchResumeStatus(resumeId: number): Promise<ResumeStatusRecord> {
   const response = await api.get<ResumeStatusResponse>(`${resumesBasePath}/${resumeId}/status`);
-  return normalizeStatus(response.data.status);
+  return {
+    status: normalizeStatus(response.data.status),
+    structuralScore: response.data.structural_score,
+    semanticScore: response.data.semantic_score,
+    atsScore: response.data.ats_score,
+  };
 }
 
 export async function updateResume(
