@@ -2,8 +2,8 @@
 
 import axios from "axios";
 
-import { useAuthStore } from "@/stores/auth.store";
 import { getPublicApiBaseUrl } from "@/lib/env";
+import { useAuthStore } from "@/stores/auth.store";
 
 export const api = axios.create({
   withCredentials: true,
@@ -29,7 +29,7 @@ api.interceptors.response.use(
     if (status === 401 && originalRequest && !originalRequest._retry && originalRequest.url !== "/api/auth/refresh") {
       originalRequest._retry = true;
       try {
-        const refreshResponse = await fetch("/api/auth/refresh", {
+        const refreshResponse = await fetch(`${getPublicApiBaseUrl()}/api/v1/auth/refresh`, {
           method: "POST",
           credentials: "include",
         });

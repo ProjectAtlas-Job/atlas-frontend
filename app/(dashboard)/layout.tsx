@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { api } from "@/lib/api";
+import { getPublicApiBaseUrl } from "@/lib/env";
 import type { UserRead } from "@/lib/types";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
@@ -13,19 +14,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const setToken = useAuthStore((state) => state.setToken);
   const setUser = useAuthStore((state) => state.setUser);
   const logout = useAuthStore((state) => state.logout);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    if (!hasHydrated) {
+      return;
+    }
+
     let cancelled = false;
 
     async function ensureSession() {
       try {
         let token = accessToken;
         if (!token) {
-          const refreshResponse = await fetch("/api/auth/refresh", {
+          const refreshResponse = await fetch(`${getPublicApiBaseUrl()}/api/v1/auth/refresh`, {
             method: "POST",
             credentials: "include",
           });
@@ -67,9 +73,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => {
       cancelled = true;
     };
-  }, [accessToken, logout, router, setToken, setUser, user]);
+  }, [accessToken, hasHydrated, logout, router, setToken, setUser, user]);
 
-  if (!isReady) {
+  if (!hasHydrated || !isReady) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[linear-gradient(180deg,#f7f7f2_0%,#eef2ec_52%,#f6f4ee_100%)] px-4 text-sm font-medium text-slate-600">
         Preparing your dashboard...
